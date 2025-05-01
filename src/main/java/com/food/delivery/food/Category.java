@@ -19,6 +19,10 @@ public class Category {
 		this.categoryName = categoryName;
 		this.items = items;
 	}
+	
+	public void addItem(Item item) {
+		this.items.add(item);
+	}
 
 	public String getCategoryName() {
 		return categoryName;
