@@ -1,4 +1,4 @@
-package com.food.delivery.food;
+package com.food.delivery.menu;
 
 public class Item {
 	

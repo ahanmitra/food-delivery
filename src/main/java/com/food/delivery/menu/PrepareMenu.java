@@ -1,4 +1,4 @@
-package com.food.delivery.food;
+package com.food.delivery.menu;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
