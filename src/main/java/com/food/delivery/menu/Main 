@@ -1,0 +1,320 @@
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Random;
+
+public class OnlineDeliveryAppGUI {
+
+    // Product class
+    static class Product {
+        String name;
+        double price;
+
+        Product(String name, double price) {
+            this.name = name;
+            this.price = price;
+        }
+
+        public String toString() {
+            return name + " - ₹" + price;
+        }
+    }
+
+    // Cart item class
+    static class CartItem {
+        Product product;
+        int quantity;
+
+        CartItem(Product product, int quantity) {
+            this.product = product;
+            this.quantity = quantity;
+        }
+
+        public String toString() {
+            return product.name + " x " + quantity + " = ₹" + (product.price * quantity);
+        }
+    }
+
+    private ArrayList<Product> products;
+    private ArrayList<CartItem> cart;
+    private JTextArea displayArea;
+    private Random random;
+
+    public OnlineDeliveryAppGUI() {
+        products = new ArrayList<Product>();
+        cart = new ArrayList<CartItem>();
+        random = new Random();
+        initializeProducts();
+        createAndShowGUI();
+    }
+
+    private void initializeProducts() {
+        products.add(new Product("Pizza", 299));
+        products.add(new Product("Burger", 149));
+        products.add(new Product("Sandwich", 99));
+        products.add(new Product("Fries", 79));
+        products.add(new Product("Coke", 49));
+    }
+
+    private void createAndShowGUI() {
+        JFrame frame = new JFrame("Online Delivery App");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 480);
+        frame.setLayout(new BorderLayout());
+
+        displayArea = new JTextArea();
+        displayArea.setEditable(false);
+        displayArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        frame.add(new JScrollPane(displayArea), BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(6, 1, 5, 5));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JButton viewProductsButton = new JButton("View Products");
+ 
+        buttonPanel.add(viewProductsButton);
+
+        JButton addToCartButton = new JButton("Add to Cart");
+        addToCartButton.addActionListener(e -> addToCart());
+        buttonPanel.add(addToCartButton);
+
+        JButton viewCartButton = new JButton("View Cart");
+        viewCartButton.addActionListener(e -> viewCart());
+        buttonPanel.add(viewCartButton);
+
+        JButton checkoutButton = new JButton("Checkout");
+        checkoutButton.addActionListener(e -> checkout());
+        buttonPanel.add(checkoutButton);
+
+        JButton paymentButton = new JButton("Payment");
+        paymentButton.addActionListener(e -> pay());
+        buttonPanel.add(paymentButton);
+
+        JButton exitButton = new JButton("Exit");
+        exitButton.addActionListener(e -> System.exit(0));
+        buttonPanel.add(exitButton);
+
+        frame.add(buttonPanel, BorderLayout.EAST);
+        frame.setVisible(true);
+    }
+
+    private void viewProducts() {
+        StringBuilder sb = new StringBuilder("Available Products:\n");
+        for (int i = 0; i < products.size(); i++) {
+            sb.append((i + 1)).append(". ").append(products.get(i)).append("\n");
+        }
+        displayArea.setText(sb.toString());
+    }
+
+    private void addToCart() {
+        String input = JOptionPane.showInputDialog(null, "Enter product number to add:");
+        if (input == null) return;
+
+        int productIndex;
+        try {
+            productIndex = Integer.parseInt(input) - 1;
+        } catch (NumberFormatException e) {
+            displayArea.setText("Invalid input. Please enter a number.");
+            return;
+        }
+
+        if (productIndex >= 0 && productIndex < products.size()) {
+            String qtyInput = JOptionPane.showInputDialog(null, "Enter quantity:");
+            if (qtyInput == null) return;
+            int qty;
+            try {
+                qty = Integer.parseInt(qtyInput);
+            } catch (NumberFormatException e) {
+                displayArea.setText("Invalid quantity. Please enter a number.");
+                return;
+            }
+            if (qty <= 0) {
+                displayArea.setText("Quantity should be greater than zero.");
+                return;
+            }
+            cart.add(new CartItem(products.get(productIndex), qty));
+            displayArea.setText("Added to cart: " + products.get(productIndex).name + " x " + qty);
+        } else {
+            displayArea.setText("Invalid product number.");
+        }
+    }
+
+    private void viewCart() {
+        if (cart.isEmpty()) {
+            displayArea.setText("Your cart is empty.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder("Your Cart:\n");
+        double total = 0;
+        for (int i = 0; i < cart.size(); i++) {
+            CartItem item = cart.get(i);
+            sb.append((i + 1)).append(". ").append(item).append("\n");
+            total += item.product.price * item.quantity;
+        }
+        sb.append("Total: ₹").append(total);
+        displayArea.setText(sb.toString());
+    }
+
+    private void checkout() {
+        if (cart.isEmpty()) {
+            displayArea.setText("Your cart is empty. Add items before checkout.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder("Checkout Summary:\n");
+        double grandTotal = 0;
+        for (int i = 0; i < cart.size(); i++) {
+            CartItem item = cart.get(i);
+            sb.append((i + 1)).append(". ").append(item).append("\n");
+            grandTotal += item.product.price * item.quantity;
+        }
+        sb.append("Grand Total: ₹").append(grandTotal);
+        sb.append("\nYou can now proceed to Payment.");
+        displayArea.setText(sb.toString());
+    }
+
+    private void pay() {
+        if (cart.isEmpty()) {
+            displayArea.setText("Your cart is empty. Add items and checkout before payment.");
+            return;
+        }
+
+        String[] options = {"Cash On Delivery (COD)", "UPI", "Credit Card"};
+        int paymentChoice = JOptionPane.showOptionDialog(null,
+                "Select Payment Method:",
+                "Payment",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (paymentChoice == -1) return;
+
+        switch (paymentChoice) {
+            case 0: // COD
+                displayArea.setText("Payment Method: Cash On Delivery\nThank you for your order!");
+                cart.clear();
+                break;
+
+            case 1: // UPI
+                String upiId = JOptionPane.showInputDialog(null, "Enter your UPI ID (e.g. example@upi):");
+                if (upiId == null || upiId.trim().isEmpty()) {
+                    displayArea.setText("UPI ID cannot be empty.");
+                    return;
+                }
+                if (verifyOTP()) {
+                    displayArea.setText("Payment Method: UPI\nPayment Successful!\nThank you for your order!");
+                    cart.clear();
+                } else {
+                    displayArea.setText("OTP verification failed. Payment cancelled.");
+                }
+                break;
+
+            case 2: // Credit Card
+                JPanel cardPanel = new JPanel(new GridLayout(3, 2, 5, 5));
+                JTextField cardNumberField = new JTextField();
+                JTextField expiryField = new JTextField();
+                JTextField cvvField = new JTextField();
+
+                cardPanel.add(new JLabel("Card Number:"));
+                cardPanel.add(cardNumberField);
+                cardPanel.add(new JLabel("Expiry (MM/YY):"));
+                cardPanel.add(expiryField);
+                cardPanel.add(new JLabel("CVV:"));
+                cardPanel.add(cvvField);
+
+                int result = JOptionPane.showConfirmDialog(null, cardPanel,
+                        "Enter Credit Card Details", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    String cardNumber = cardNumberField.getText().trim();
+                    String expiry = expiryField.getText().trim();
+                    String cvv = cvvField.getText().trim();
+
+                    if (cardNumber.isEmpty() || expiry.isEmpty() || cvv.isEmpty()) {
+                        displayArea.setText("All credit card fields are required.");
+                        return;
+                    }
+                    if (!cardNumber.matches("\\d{13,19}")) {
+                        displayArea.setText("Invalid card number.");
+                        return;
+                    }
+                    if (!expiry.matches("(0[1-9]|1[0-2])/\\d{2}")) {
+                        displayArea.setText("Invalid expiry format.");
+                        return;
+                    }
+                    if (!cvv.matches("\\d{3,4}")) {
+                        displayArea.setText("Invalid CVV.");
+                        return;
+                    }
+                    if (verifyOTP()) {
+                        displayArea.setText("Payment Method: Credit Card\nPayment Successful!\nThank you for your order!");
+                        cart.clear();
+                    } else {
+                        displayArea.setText("OTP verification failed. Payment cancelled.");
+                    }
+                } else {
+                    displayArea.setText("Credit card payment cancelled.");
+                }
+                break;
+        }
+    }
+
+    private boolean verifyOTP() {
+        int otp = 100000 + random.nextInt(900000);
+        JOptionPane.showMessageDialog(null, "Your OTP is: " + otp, "OTP Sent", JOptionPane.INFORMATION_MESSAGE);
+        String enteredOtpStr = JOptionPane.showInputDialog(null, "Enter the OTP:");
+        if (enteredOtpStr == null || enteredOtpStr.trim().isEmpty()) return false;
+        try {
+            int enteredOtp = Integer.parseInt(enteredOtpStr.trim());
+            return enteredOtp == otp;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    // ---------- LOGIN SCREEN ----------
+    static class LoginScreen {
+        public void showLogin() {
+            Random random = new Random();
+
+            JPanel panel = new JPanel(new BorderLayout(10, 10));
+            JLabel lockIcon = new JLabel(UIManager.getIcon("OptionPane.informationIcon")); // Placeholder for lock
+            JLabel phoneLabel = new JLabel("Enter Phone Number:");
+            JTextField phoneField = new JTextField();
+
+            panel.add(lockIcon, BorderLayout.WEST);
+            JPanel inputPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+            inputPanel.add(phoneLabel);
+            inputPanel.add(phoneField);
+            panel.add(inputPanel, BorderLayout.CENTER);
+
+            int result = JOptionPane.showConfirmDialog(null, panel, "Login", JOptionPane.OK_CANCEL_OPTION);
+            if (result != JOptionPane.OK_OPTION || phoneField.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Login cancelled.");
+                System.exit(0);
+            }
+
+            int otp = 100000 + random.nextInt(900000);
+            JOptionPane.showMessageDialog(null, "Your OTP is: " + otp, "OTP Sent", JOptionPane.INFORMATION_MESSAGE);
+            String enteredOtp = JOptionPane.showInputDialog(null, "Enter OTP:");
+            if (enteredOtp == null || !enteredOtp.trim().equals(String.valueOf(otp))) {
+                JOptionPane.showMessageDialog(null, "Invalid OTP. Exiting.");
+                System.exit(0);
+            }
+        }
+    }
+
+    // ---------- MAIN ----------
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new LoginScreen().showLogin();     // First login
+                new OnlineDeliveryAppGUI();        // Then launch main app
+            }
+        });
+    }
+}
